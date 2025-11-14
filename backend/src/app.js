@@ -9,8 +9,8 @@ const fs = require('fs');
 
 const { UPLOAD_ROOT, SLIP_DIR } = require('./utils/uploadPaths');
 
-fs.mkdirSync(SLIP_DIR, { recursive: true });    // ยังสร้างไว้ เพราะยังมีรูปอื่นๆใน /uploads
-fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
+// fs.mkdirSync(SLIP_DIR, { recursive: true });    // ยังสร้างไว้ เพราะยังมีรูปอื่นๆใน /uploads
+// fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
 
 const adminRoutes = require('./modules/admin/admin.routes.js');
 const roomRoutes = require('./modules/room/room.routes.js');
