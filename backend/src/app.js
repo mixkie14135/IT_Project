@@ -1,3 +1,4 @@
+// src/app.js
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -75,11 +76,7 @@ app.use('/api', (req, res) => {
 });
 
 /* ===== Root route & favicon ===== */
-app.get('/', (_req, res) => {
-  res.json({ message: 'Backend is running' });
-});
-
+app.get('/', (_req, res) => res.json({ message: 'Backend is running' }));
 app.get('/favicon.ico', (_req, res) => res.status(204).end());
 
-/* ===== Export app สำหรับ Vercel ===== */
 module.exports = app;
