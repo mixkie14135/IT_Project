@@ -1,6 +1,8 @@
 // src/lib/api.js
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8800/api").replace(/\/$/, "");
 const API_ORIGIN = API_BASE.replace(/\/api\/?$/, "");
+const SUPABASE_URL = "https://xekmvheudpmzxfhrkhgm.supabase.co/storage/v1/object/resort-public";
+
 
 // --- helpers: token & headers ---
 function getToken() {
@@ -108,10 +110,21 @@ export function toArray(x) {
 }
 export function fileUrl(p) {
   if (!p) return "";
+
+  // 1. ถ้าเป็น full URL อยู่แล้ว
   if (/^https?:\/\//i.test(p)) return p;
-  const norm = String(p).replace(/\\/g, "/");
-  const rel = norm.startsWith("/") ? norm : "/" + norm;
-  return `${API_ORIGIN}${rel}`;
+
+  // 2. ถ้า path เป็น /uploads/rooms/... หรือ /uploads/banquets/...
+  const norm = String(p).replace(/\\/g, "/").replace(/^\/+/, ""); // เอา / ข้างหน้าออก
+  if (norm.startsWith("uploads/rooms/")) {
+    return `${SUPABASE_URL}/rooms/${norm.split("/").slice(2).join("/")}`;
+  } 
+  if (norm.startsWith("uploads/banquets/")) {
+    return `${SUPABASE_URL}/banquets/${norm.split("/").slice(2).join("/")}`;
+  }
+
+  // 3. fallback: ต่อกับ API_ORIGIN เผื่อ path อื่น ๆ
+  return `${API_ORIGIN}/${norm}`;
 }
 
 /* ===================== Banquet API ===================== */
