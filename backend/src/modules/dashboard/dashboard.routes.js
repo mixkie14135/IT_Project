@@ -5,8 +5,6 @@ const router = express.Router();
 const { requireAdminAuth } = require('../../middlewares/authAdmin');
 const ctrl = require('./dashboard.controller');
 
-// *** เปิด/ปิด requireAdminAuth ระหว่าง dev ตามสะดวก ***
-// ตัวอย่างนี้ “เปิด” ไว้เพื่อความปลอดภัย
 
 // ROOMS
 router.get('/dashboard/rooms/status',        requireAdminAuth, ctrl.roomsStatus);

@@ -39,8 +39,8 @@ router.post(
 router.get("/banquet/:id", requireAdminAuth, banquetCtrl.getBanquetPaymentById);
 router.get("/banquet", requireAdminAuth, banquetCtrl.listBanquetPayments);
 
-// แอดมินอนุมัติ / ปฏิเสธ
-router.post("/banquet/:id/approve", requireAdminAuth, banquetCtrl.approveBanquetPayment);
+// แอดมินอนุมัติ / ปฏิเสธs 
+router.post("/banquet/:id/approves ", requireAdminAuth, banquetCtrl.approveBanquetPayment);
 router.post("/banquet/:id/reject", requireAdminAuth, banquetCtrl.rejectBanquetPayment);
 
 // แอดมินขอ "ลิงก์ดูสลิปแบบ signed URL" (อายุเริ่มต้น 30 นาที)

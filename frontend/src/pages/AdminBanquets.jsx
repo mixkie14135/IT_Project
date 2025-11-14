@@ -382,7 +382,6 @@ export default function AdminBanquets({ embedded = false }) {
       <div className="toolbar">
         <div className="toolLeft">
           <div className="info">
-            <span className="icon">🎉</span>
             ห้องจัดเลี้ยงทั้งหมด ({view.length} ห้อง)
           </div>
 

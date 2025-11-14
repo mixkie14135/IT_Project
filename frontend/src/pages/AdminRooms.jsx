@@ -397,7 +397,6 @@ export default function AdminRooms({ embedded = false }) {
       <div className="toolbar">
         <div className="toolLeft">
           <div className="info">
-            <span className="icon">🏠</span>
             ห้องพักทั้งหมด ({view.length} ห้อง)
           </div>
           <div className="search">

@@ -252,7 +252,7 @@ export default function AdminDashboard() {
                   value={fmtBaht(revenueNumber)}
                 />
                 <p className="text-xs text-gray-500 mt-2">
-                  *อ้างอิงจากการชำระเงินที่ยืนยันแล้ว (paid_at)
+                  *อ้างอิงจากการชำระเงินที่ยืนยันแล้ว
                 </p>
               </>
             ) : (

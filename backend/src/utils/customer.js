@@ -1,3 +1,4 @@
+// backend/src/utils/customer.js
 function normalizePhoneTH(phone) {
   const d = (phone || '').replace(/\D/g, '');
   if (d.startsWith('0') && d.length === 10) return '+66' + d.slice(1);
@@ -5,6 +6,7 @@ function normalizePhoneTH(phone) {
   if (phone && phone.startsWith('+66')) return phone;
   return phone || null;
 }
+
 function isEmailValid(email) {
   return !!email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }

@@ -3,7 +3,7 @@ const rateLimit = require('express-rate-limit');
 // สำหรับเส้นทาง public (จอง, อัปสลิป, เช็คสถานะ)
 const publicRateLimit = rateLimit({
   windowMs: 60 * 1000,
-  max: 30,
+  max: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (req, res, _next) => {

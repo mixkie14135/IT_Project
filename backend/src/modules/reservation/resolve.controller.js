@@ -7,7 +7,7 @@ exports.resolveReservationByCode = async (req, res) => {
     const code = String(req.query.code || "").trim();
     if (!code) return res.status(400).json({ message: "code is required" });
 
-    // ลองหาในห้องพักก่อน
+    // หาในห้องพักก่อน
     const r = await prisma.reservation_room.findUnique({
       where: { reservation_code: code },
       select: { reservation_code: true },

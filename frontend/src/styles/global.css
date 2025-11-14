@@ -1,4 +1,3 @@
-/* frontend/src/styles/global.css*/
 :root{
   --brand:#3c5537;
   --line:#e9e9e9;
@@ -649,8 +648,6 @@ body{
 .homeFull .homeCardDesc{
   margin:0; color:#555; line-height:1.7;
   max-width: var(--desc-max, 100ch);
-  /* text-wrap: balance;  <-- เอาออก */
-  /* ทางเลือกถ้าอยากไหลเต็มขอบจริง ๆ: */
   text-wrap: normal;      /* ค่าเริ่มต้น */
   word-break: normal;     /* กันแตกคำแปลก ๆ */
   line-break: auto;       /* ใช้กฎตัดบรรทัดปกติ */
