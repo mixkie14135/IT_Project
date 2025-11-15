@@ -1,4 +1,3 @@
-// src/app.js
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -11,13 +10,13 @@ const { UPLOAD_ROOT, SLIP_DIR } = require('./utils/uploadPaths');
 const adminRoutes = require('./modules/admin/admin.routes.js');
 const roomRoutes = require('./modules/room/room.routes.js');
 const banquetRoutes = require('./modules/banquet/banquet.routes.js');
-const reservationRoomRoutes = require('./modules/reservation/room/reservationRoom.routes');
-const reservationBanquetRoutes = require('./modules/reservation/banquet/reservationBanquet.routes');
-const reservationResolveRoutes = require('./modules/reservation/resolve.routes');
-const roomImageRoutes = require('./modules/room/image/roomImage.routes');
-const banquetImageRoutes = require('./modules/banquet/image/banquetImage.routes');
-const paymentRoutes = require('./modules/payment/payment.routes');
-const dashboardRoutes = require('./modules/dashboard/dashboard.routes');
+const reservationRoomRoutes = require('./modules/reservation/room/reservationRoom.routes.js');
+const reservationBanquetRoutes = require('./modules/reservation/banquet/reservationBanquet.routes.js');
+const reservationResolveRoutes = require('./modules/reservation/resolve.routes.js');
+const roomImageRoutes = require('./modules/room/image/roomImage.routes.js');
+const banquetImageRoutes = require('./modules/banquet/image/banquetImage.routes.js');
+const paymentRoutes = require('./modules/payment/payment.routes.js');
+const dashboardRoutes = require('./modules/dashboard/dashboard.routes.js');
 
 const { publicRateLimit } = require("./middlewares/ratelimit");
 
