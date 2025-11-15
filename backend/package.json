@@ -4,8 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "dev": "nodemon src/app.js",
-    "start": "node src/app.js",
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
     "build": "echo \"no build step for backend\"",
     "vercel-build": "npx prisma generate && npm run build",
     "postinstall": "npx prisma generate",
