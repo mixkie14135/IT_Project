@@ -3,7 +3,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -112,7 +112,7 @@ model banquet_image {
 
   banquet_room banquet_room @relation(fields: [banquet_id], references: [banquet_id], onDelete: Cascade, onUpdate: NoAction, map: "banquet_image_ibfk_1")
 
-  @@index([banquet_id], map: "banquet_id")
+  @@index([banquet_id], map: "banquet_image_banquet_id")
 }
 
 model customer {
@@ -171,7 +171,7 @@ model room_image {
 
   room room @relation(fields: [room_id], references: [room_id], onDelete: Cascade, onUpdate: NoAction, map: "room_image_ibfk_1")
 
-  @@index([room_id], map: "room_id")
+  @@index([room_id], map: "room_image_room_id")
 }
 
 model reservation_room {
@@ -204,10 +204,10 @@ model reservation_room {
   customer customer @relation(fields: [customer_id], references: [customer_id], onDelete: NoAction, onUpdate: NoAction, map: "reservation_room_ibfk_1")
   room     room     @relation(fields: [room_id], references: [room_id], onDelete: NoAction, onUpdate: NoAction, map: "reservation_room_ibfk_2")
 
-  @@index([customer_id], map: "customer_id")
+  @@index([customer_id], map: "res_room_customer_id")
   @@index([status], map: "idx_res_room_status")
   @@index([room_id, checkin_date, checkout_date], map: "idx_room_dates")
-  @@index([room_id], map: "room_id")
+  @@index([room_id], map: "res_room_room_id")
 }
 
 model reservation_banquet {
@@ -236,8 +236,8 @@ model reservation_banquet {
   customer     customer     @relation(fields: [customer_id], references: [customer_id], onDelete: NoAction, onUpdate: NoAction, map: "reservation_banquet_ibfk_1")
   banquet_room banquet_room @relation(fields: [banquet_id], references: [banquet_id], onDelete: NoAction, onUpdate: NoAction, map: "reservation_banquet_ibfk_2")
 
-  @@index([banquet_id], map: "banquet_id")
-  @@index([customer_id], map: "customer_id")
+  @@index([banquet_id], map: "res_banquet_banquet_id")
+  @@index([customer_id], map: "res_banquet_customer_id")
   @@index([banquet_id, event_date, start_time, end_time], map: "idx_banquet_datetime")
   @@index([status], map: "idx_res_banquet_status")
 }
