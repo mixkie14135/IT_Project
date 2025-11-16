@@ -12,17 +12,17 @@ const {
 
 const router = express.Router();
 
-// ---- เส้นคงที่/ค้นหา รวมหลายห้อง (มาก่อน :id)
-router.get('/banquets', getBanquets);
-router.get('/banquets/available', getAvailableBanquets);
+// ---- เส้นคงที่/ค้นหา รวมหลายห้อง (มาก่อน :๐id)
+router.get('/', getBanquets);
+router.get('/available', getAvailableBanquets);
 
 // ---- รายห้อง + availability
-router.get('/banquets/:id', getBanquet);
-router.get('/banquets/:id/availability', getBanquetAvailability);
+router.get('/:id', getBanquet);
+router.get('/:id/availability', getBanquetAvailability);
 
 // ---- สร้าง/แก้/ลบ
-router.post('/banquets', createBanquet);
-router.put('/banquets/:id', updateBanquet);
-router.delete('/banquets/:id', deleteBanquet);
+router.post('/', createBanquet);
+router.put('/:id', updateBanquet);
+router.delete('/:id', deleteBanquet);
 
 module.exports = router;

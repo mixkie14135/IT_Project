@@ -16,17 +16,17 @@ const {
 const router = express.Router();
 
 // อ่านห้องทั้งหมด
-router.get('/rooms', getRooms);
+router.get('/', getRooms);
 // ค้นหาห้องว่างตามช่วงวัน
-router.get('/rooms/available', getAvailableRooms);
+router.get('/available', getAvailableRooms);
 // ตรวจสอบห้องว่างตาม id และช่วงวัน
-router.get('/rooms/:id/availability', getRoomAvailability);
+router.get('/:id/availability', getRoomAvailability);
 // อ่านห้องตาม id
-router.get('/rooms/:id', getRoom);
+router.get('/:id', getRoom);
 // สร้าง / แก้ไข / ลบ
-router.post('/rooms', createRoom);
-router.put('/rooms/:id', updateRoom);
-router.delete('/rooms/:id', deleteRoom);
+router.post('/', createRoom);
+router.put('/:id', updateRoom);
+router.delete('/:id', deleteRoom);
 // ประเภทห้อง
 router.get('/room-types', getRoomTypes);
 router.post('/room-types', createRoomType);
