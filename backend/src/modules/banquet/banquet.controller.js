@@ -1,4 +1,3 @@
-// backend/src/modules/banquet/banquet.controller.js
 const prisma = require('../../config/prisma');
 const policy = require('../../config/reservationPolicy');
 
@@ -31,30 +30,33 @@ function isTimeOverlap(minAStart, minAEnd, minBStart, minBEnd) {
 
 /* ===================== Controllers ===================== */
 
+// GET /api/banquets
 exports.getBanquets = async (_req, res) => {
   try {
     const banquets = await prisma.banquet_room.findMany({
       include: { banquet_image: true }
     });
-    res.json(banquets);
+    res.json({ status: 'ok', data: banquets });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ status: 'error', message: err.message });
   }
 };
 
+// GET /api/banquets/:id
 exports.getBanquet = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    if (!id) return res.status(400).json({ message: 'invalid id' });
+    if (!id) return res.status(400).json({ status: 'error', message: 'banquet_id is required' });
 
     const banquet = await prisma.banquet_room.findUnique({
       where: { banquet_id: id },
       include: { banquet_image: true }
     });
-    if (!banquet) return res.status(404).json({ message: 'Banquet not found' });
-    res.json(banquet);
+    if (!banquet) return res.status(404).json({ status: 'error', message: 'Banquet not found' });
+
+    res.json({ status: 'ok', data: banquet });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ status: 'error', message: err.message });
   }
 };
 
@@ -63,14 +65,14 @@ exports.getAvailableBanquets = async (req, res) => {
   try {
     const { date, start, end, capacityGte, include } = req.query;
     if (!date || !start || !end) {
-      return res.status(400).json({ message: 'date, start, end are required' });
+      return res.status(400).json({ status: 'error', message: 'date, start, end are required' });
     }
 
     const [dayStart, dayEnd] = dayRangeUTC(date);
     const reqStart = parseHHmmToUTC(start);
     const reqEnd   = parseHHmmToUTC(end);
     if (!dayStart || !dayEnd || !reqStart || !reqEnd || reqEnd <= reqStart) {
-      return res.status(400).json({ message: 'invalid date/time (YYYY-MM-DD, HH:mm; end > start)' });
+      return res.status(400).json({ status: 'error', message: 'invalid date/time (YYYY-MM-DD, HH:mm; end > start)' });
     }
 
     const includeObj = {};
@@ -83,6 +85,7 @@ exports.getAvailableBanquets = async (req, res) => {
         ...(capacityGte ? [{ capacity: { gte: Number(capacityGte) } }] : [])
       ]
     };
+
     const baseRooms = await prisma.banquet_room.findMany({
       where: roomWhere,
       orderBy: { banquet_id: 'asc' },
@@ -90,7 +93,7 @@ exports.getAvailableBanquets = async (req, res) => {
     });
 
     if (baseRooms.length === 0) {
-      return res.json({ page: 1, limit: 10, total: 0, totalPages: 0, items: [] });
+      return res.json({ status: 'ok', page: 1, limit: 10, total: 0, totalPages: 0, items: [] });
     }
 
     const roomIds = baseRooms.map(r => r.banquet_id);
@@ -98,9 +101,9 @@ exports.getAvailableBanquets = async (req, res) => {
       where: {
         banquet_id: { in: roomIds },
         event_date: { gte: dayStart, lt: dayEnd },
-        status: { in: policy.banquet.blockStatuses } // <<< ใช้ policy
+        status: { in: policy.banquet.blockStatuses }
       },
-      select: { banquet_id: true, start_time: true, end_time: true, reservation_id: true, status: true }
+      select: { banquet_id: true, start_time: true, end_time: true }
     });
 
     const byRoom = new Map();
@@ -118,9 +121,7 @@ exports.getAvailableBanquets = async (req, res) => {
       for (const bk of bookings) {
         const bkStartMin = minutesSinceMidnightUTC(bk.start_time);
         const bkEndMin   = minutesSinceMidnightUTC(bk.end_time);
-        if (isTimeOverlap(bkStartMin, bkEndMin, reqStartMin, reqEndMin)) {
-          return false;
-        }
+        if (isTimeOverlap(bkStartMin, bkEndMin, reqStartMin, reqEndMin)) return false;
       }
       return true;
     });
@@ -132,18 +133,20 @@ exports.getAvailableBanquets = async (req, res) => {
     const startIdx = (page - 1) * limit;
     const items = availableRooms.slice(startIdx, startIdx + limit);
 
-    res.json({ page, limit, total, totalPages, items });
+    res.json({ status: 'ok', page, limit, total, totalPages, items });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ status: 'error', message: err.message });
   }
 };
 
+// POST /api/banquets
 exports.createBanquet = async (req, res) => {
   try {
     const { name, capacity, price_per_hour, status, description } = req.body;
     if (!name || !capacity || !price_per_hour) {
-      return res.status(400).json({ message: 'name, capacity, price_per_hour required' });
+      return res.status(400).json({ status: 'error', message: 'name, capacity, price_per_hour required' });
     }
+
     const created = await prisma.banquet_room.create({
       data: {
         name,
@@ -153,16 +156,18 @@ exports.createBanquet = async (req, res) => {
         description
       }
     });
-    res.status(201).json(created);
+
+    res.status(201).json({ status: 'ok', data: created });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ status: 'error', message: err.message });
   }
 };
 
+// PUT /api/banquets/:id
 exports.updateBanquet = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    if (!id) return res.status(400).json({ message: 'invalid id' });
+    if (!id) return res.status(400).json({ status: 'error', message: 'banquet_id is required' });
 
     const { name, capacity, price_per_hour, status, description } = req.body;
     const data = {};
@@ -172,56 +177,61 @@ exports.updateBanquet = async (req, res) => {
     if (status != null) data.status = status;
     if (description != null) data.description = description;
 
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({ status: 'error', message: 'No fields to update' });
+    }
+
     const updated = await prisma.banquet_room.update({
       where: { banquet_id: id },
       data
     });
-    res.json(updated);
+
+    res.json({ status: 'ok', data: updated });
   } catch (err) {
     if (err.code === 'P2025') {
-      return res.status(404).json({ message: 'Banquet not found' });
+      return res.status(404).json({ status: 'error', message: 'Banquet not found' });
     }
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ status: 'error', message: err.message });
   }
 };
 
+// DELETE /api/banquets/:id
 exports.deleteBanquet = async (req, res) => {
   try {
     const id = Number(req.params.id);
-    if (!id) return res.status(400).json({ message: 'invalid id' });
+    if (!id) return res.status(400).json({ status: 'error', message: 'banquet_id is required' });
 
     await prisma.banquet_room.delete({ where: { banquet_id: id } });
-    res.json({ message: `Banquet ${id} deleted` });
+    res.json({ status: 'ok', message: `Banquet ${id} deleted` });
   } catch (err) {
     if (err.code === 'P2025') {
-      return res.status(404).json({ message: 'Banquet not found' });
+      return res.status(404).json({ status: 'error', message: 'Banquet not found' });
     }
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ status: 'error', message: err.message });
   }
 };
 
-// รายห้อง: เช็กช่วงวันเวลา ว่าว่างไหม
+// GET /api/banquets/:id/availability?date=YYYY-MM-DD&start=HH:mm&end=HH:mm
 exports.getBanquetAvailability = async (req, res) => {
   try {
     const banquetId = Number(req.params.id);
     const { date, start, end } = req.query;
-
     if (!banquetId || !date || !start || !end) {
-      return res.status(400).json({ message: 'banquetId, date, start, end required' });
+      return res.status(400).json({ status: 'error', message: 'banquet_id, date, start, end required' });
     }
 
     const [dayStart, dayEnd] = dayRangeUTC(date);
     const reqStart = parseHHmmToUTC(start);
     const reqEnd   = parseHHmmToUTC(end);
     if (!dayStart || !dayEnd || !reqStart || !reqEnd || reqEnd <= reqStart) {
-      return res.status(400).json({ message: 'invalid date/time (YYYY-MM-DD, HH:mm; end > start)' });
+      return res.status(400).json({ status: 'error', message: 'invalid date/time (YYYY-MM-DD, HH:mm; end > start)' });
     }
 
     const bookings = await prisma.reservation_banquet.findMany({
       where: {
         banquet_id: banquetId,
         event_date: { gte: dayStart, lt: dayEnd },
-        status: { in: policy.banquet.blockStatuses } // <<< ใช้ policy
+        status: { in: policy.banquet.blockStatuses }
       },
       select: { reservation_id: true, start_time: true, end_time: true, status: true }
     });
@@ -235,12 +245,8 @@ exports.getBanquetAvailability = async (req, res) => {
       return isTimeOverlap(bStartMin, bEndMin, reqStartMin, reqEndMin);
     });
 
-    return res.json({
-      banquet_id: banquetId,
-      date, start, end,
-      available: !overlap
-    });
+    res.json({ status: 'ok', data: { banquet_id: banquetId, date, start, end, available: !overlap } });
   } catch (err) {
-    return res.status(500).json({ status: 'error', message: err.message });
+    res.status(500).json({ status: 'error', message: err.message });
   }
 };

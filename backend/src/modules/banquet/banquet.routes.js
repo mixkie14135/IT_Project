@@ -1,28 +1,27 @@
-// backend/src/modules/banquet/banquet.routes.js
 const express = require('express');
 const {
-  getBanquets,
-  getBanquet,
-  getAvailableBanquets,
-  getBanquetAvailability,
-  createBanquet,
-  updateBanquet,
-  deleteBanquet
+  getBanquets,
+  getBanquet,
+  getAvailableBanquets,
+  getBanquetAvailability,
+  createBanquet,
+  updateBanquet,
+  deleteBanquet
 } = require('../banquet/banquet.controller.js');
 
 const router = express.Router();
 
-// ---- Route List (รับ Path /api/banquets)
+// ---- List
 router.get('/', getBanquets);
 
-// ---- Route ที่เจาะจง (มาก่อน /:id)
-router.get('/available', getAvailableBanquets); // /api/banquets/available
+// ---- Available (ต้องมาก่อน /:id)
+router.get('/available', getAvailableBanquets);
 
-// ---- รายห้อง + availability
-router.get('/:id/availability', getBanquetAvailability); // /api/banquets/:id/availability
-router.get('/:id', getBanquet); // /api/banquets/:id
+// ---- Detail + availability
+router.get('/:id/availability', getBanquetAvailability);
+router.get('/:id', getBanquet);
 
-// ---- สร้าง/แก้/ลบ
+// ---- CRUD
 router.post('/', createBanquet);
 router.put('/:id', updateBanquet);
 router.delete('/:id', deleteBanquet);

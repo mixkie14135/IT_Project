@@ -1,10 +1,9 @@
-// backend/src/modules/room/room.controller.js
 const prisma = require('../../config/prisma.js');
 const policy = require('../../config/reservationPolicy');
 
 /**
  * GET /api/rooms
- * ...
+ * ดึงรายการห้องทั้งหมด (pagination, filter, include)
  */
 exports.getRooms = async (req, res) => {
   try {
@@ -12,7 +11,7 @@ exports.getRooms = async (req, res) => {
     const limit = Math.min(Math.max(parseInt(req.query.limit) || 10, 1), 100);
     const skip  = (page - 1) * limit;
 
-    const { status, typeId, minPrice, maxPrice, capacityGte, search, include, } = req.query;
+    const { status, typeId, minPrice, maxPrice, capacityGte, search, include } = req.query;
 
     const where = {};
 
@@ -35,7 +34,7 @@ exports.getRooms = async (req, res) => {
 
     const includeObj = {};
     const inc = (include || '').split(',').map(s => s.trim().toLowerCase());
-    if (inc.includes('type'))   includeObj.room_type  = true;
+    if (inc.includes('type')) includeObj.room_type = true;
     if (inc.includes('images')) includeObj.room_image = true;
 
     const [items, total] = await Promise.all([
@@ -63,21 +62,27 @@ exports.getRooms = async (req, res) => {
 
 /**
  * GET /api/rooms/:id
- * ?include=type,images
+ * ดึงข้อมูลห้องเดียว
  */
 exports.getRoom = async (req, res) => {
   try {
     const id = Number(req.params.id);
+    if (!id) {
+      return res.status(400).json({ status: 'error', message: 'room_id is required' });
+    }
+
     const includeObj = {};
     const inc = (req.query.include || '').split(',').map(s => s.trim().toLowerCase());
-    if (inc.includes('type'))   includeObj.room_type  = true;
+    if (inc.includes('type')) includeObj.room_type = true;
     if (inc.includes('images')) includeObj.room_image = true;
 
     const room = await prisma.room.findUnique({
       where: { room_id: id },
       include: includeObj,
     });
-    if (!room) return res.status(404).json({ message: 'Room not found' });
+
+    if (!room) return res.status(404).json({ status: 'error', message: 'Room not found' });
+
     res.json(room);
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
@@ -121,6 +126,8 @@ exports.createRoom = async (req, res) => {
 exports.updateRoom = async (req, res) => {
   try {
     const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ message: 'room_id is required' });
+
     const { room_number, room_type_id, capacity, price, status, description } = req.body;
 
     const data = {};
@@ -157,6 +164,8 @@ exports.updateRoom = async (req, res) => {
 exports.deleteRoom = async (req, res) => {
   try {
     const id = Number(req.params.id);
+    if (!id) return res.status(400).json({ message: 'room_id is required' });
+
     await prisma.room.delete({ where: { room_id: id } });
     res.json({ status: 'ok', message: `Room ${id} deleted` });
   } catch (err) {
@@ -172,9 +181,7 @@ exports.deleteRoom = async (req, res) => {
  */
 exports.getRoomTypes = async (_req, res) => {
   try {
-    const types = await prisma.room_type.findMany({
-      orderBy: { room_type_id: 'asc' }
-    });
+    const types = await prisma.room_type.findMany({ orderBy: { room_type_id: 'asc' } });
     res.json(types);
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
@@ -182,146 +189,15 @@ exports.getRoomTypes = async (_req, res) => {
 };
 
 /**
- * GET /api/rooms/available
- */
-exports.getAvailableRooms = async (req, res) => {
-  try {
-    const { checkin, checkout, capacityGte, typeId, include } = req.query;
-
-    if (!checkin || !checkout) {
-      return res.status(400).json({ message: 'checkin and checkout are required (YYYY-MM-DD)' });
-    }
-
-    const page  = Math.max(parseInt(req.query.page) || 1, 1);
-    const limit = Math.min(Math.max(parseInt(req.query.limit) || 4, 1), 100);
-    const skip  = (page - 1) * limit;
-
-    const wantedCheckin  = new Date(checkin);
-    const wantedCheckout = new Date(checkout);
-    if (!(wantedCheckin < wantedCheckout)) {
-      return res.status(400).json({ message: 'checkin must be before checkout' });
-    }
-
-    const includeObj = {};
-    const inc = (include || '').split(',').map(s => s.trim().toLowerCase());
-    if (inc.includes('type'))   includeObj.room_type  = true;
-    if (inc.includes('images')) includeObj.room_image = true;
-
-    const AND = [];
-    if (capacityGte) AND.push({ capacity: { gte: Number(capacityGte) } });
-    if (typeId) AND.push({ room_type_id: Number(typeId) });
-
-    AND.push({ status: 'available' });
-
-    AND.push({
-      NOT: {
-        reservation_room: {
-          some: {
-            status: { in: policy.room.blockStatuses }, // <<< ใช้ policy
-            AND: [
-              { checkin_date:  { lt: wantedCheckout } },
-              { checkout_date: { gt: wantedCheckin } },
-            ],
-          },
-        },
-      },
-    });
-
-    const where = { AND };
-
-    const [items, total] = await Promise.all([
-      prisma.room.findMany({
-        where,
-        skip,
-        take: limit,
-        orderBy: { room_id: 'asc' },
-        include: includeObj,
-      }),
-      prisma.room.count({ where }),
-    ]);
-
-    res.json({
-      page,
-      limit,
-      total,
-      totalPages: Math.ceil(total / limit),
-      items,
-    });
-  } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message });
-  }
-};
-
-/**
- * GET /api/rooms/:id/availability?checkin=YYYY-MM-DD&checkout=YYYY-MM-DD
- */
-exports.getRoomAvailability = async (req, res) => {
-  try {
-    const roomId = Number(req.params.id);
-    const { checkin, checkout } = req.query;
-
-    if (!roomId || !checkin || !checkout) {
-      return res.status(400).json({ message: 'roomId, checkin, checkout required' });
-    }
-
-    const inDate  = new Date(checkin);
-    const outDate = new Date(checkout);
-    if (isNaN(inDate) || isNaN(outDate) || outDate <= inDate) {
-      return res.status(400).json({ message: 'invalid date range' });
-    }
-
-    const overlap = await prisma.reservation_room.findFirst({
-      where: {
-        room_id: roomId,
-        status: { in: policy.room.blockStatuses }, // <<< ใช้ policy
-        checkin_date:  { lt: outDate },
-        checkout_date: { gt: inDate }
-      },
-      select: { reservation_id: true }
-    });
-
-    return res.json({
-      room_id: roomId,
-      checkin,
-      checkout,
-      available: !overlap
-    });
-  } catch (err) {
-    return res.status(500).json({ status: 'error', message: err.message });
-  }
-};
-
-
-
-exports.createRoomType = async (req, res) => {
-  try {
-    const { type_name, description } = req.body;
-    if (!type_name) return res.status(400).json({ message: 'type_name is required' });
-
-    const created = await prisma.room_type.create({
-      data: { type_name, description }
-    });
-
-    res.status(201).json({ status: 'ok', data: created });
-  } catch (err) {
-    res.status(500).json({ status: 'error', message: err.message });
-  }
-};
-
-/**
- * GET /api/room-types/:slug
- * ดึงรายละเอียดประเภทห้องด้วย slug (ใช้สำหรับหน้า /rooms/:slug)
+ * GET /api/room-types/slug/:slug
  */
 exports.getRoomTypeBySlug = async (req, res) => {
   try {
     const slug = String(req.params.slug || '').trim().toLowerCase();
-    if (!slug) {
-      return res.status(400).json({ message: 'slug is required' });
-    }
+    if (!slug) return res.status(400).json({ message: 'slug is required' });
 
     const type = await prisma.room_type.findUnique({
       where: { slug },
-      // เลือกเฉพาะฟิลด์ที่หน้า public ต้องใช้ (ขยายได้ภายหลัง)
       select: {
         room_type_id: true,
         slug: true,
@@ -334,12 +210,10 @@ exports.getRoomTypeBySlug = async (req, res) => {
       },
     });
 
-    if (!type) {
-      return res.status(404).json({ message: 'Room type not found' });
-    }
+    if (!type) return res.status(404).json({ message: 'Room type not found' });
 
-    return res.json(type);
+    res.json(type);
   } catch (err) {
-    return res.status(500).json({ status: 'error', message: err.message });
+    res.status(500).json({ status: 'error', message: err.message });
   }
 };
